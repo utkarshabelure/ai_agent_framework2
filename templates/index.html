@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ASK GPT</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: url("{{ url_for('static', filename='galaxy.jpg') }}") no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial;
+            color: white;
+        }
+        .card {
+            background: rgba(0,0,0,0.6);
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>ASK GPT</h1>
+        <a href="/task">
+            <button>START</button>
+        </a>
+    </div>
+</body>
+</html>
+
+
+
+

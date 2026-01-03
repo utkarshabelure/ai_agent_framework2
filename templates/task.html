@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Agent Task</title>
+    <style>
+        /* ===== BODY & LAYOUT ===== */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            background: url("/static/galaxy.jpg") no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 250px;
+            background-color: rgba(30,30,50,0.95);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            transition: width 0.3s;
+        }
+
+        .sidebar button, .sidebar input {
+            margin-bottom: 10px;
+        }
+
+        .sidebar button {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background-color: #6c63ff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .sidebar button:hover {
+            background-color: #584aff;
+        }
+
+        .sidebar input {
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+        }
+
+        .menu-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .chat-history button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2e2e4f;
+            color: white;
+            cursor: pointer;
+        }
+
+        .chat-history button:hover {
+            background-color: #3f3f6a;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            flex: 1;
+            text-align: center;
+            padding-top: 50px;
+            transition: margin-left 0.3s;
+        }
+
+        .main input {
+            padding: 10px;
+            width: 50%;
+            border-radius: 25px;
+            border: none;
+        }
+
+        .main button {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            background: #6c63ff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .main .output {
+            margin-top: 30px;
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 15px;
+            text-align:left;
+            display:inline-block;
+            width:60%;
+        }
+
+        .main h1 {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar" id="sidebar">
+        <button id="toggleBtn">☰</button>
+        <div id="sidebarContent">
+            <button onclick="newChat()">📝 New Chat</button>
+            <div class="menu">
+                <button class="menu-btn">🖼️ Images</button>
+                <button class="menu-btn">📦 Apps</button>
+                <button class="menu-btn">📁 Projects</button>
+            </div>
+            <h4>Your Chats</h4>
+            <div class="chat-history" id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main">
+        <h1>Ask Your Task</h1>
+        <input id="taskInput" placeholder="Ask what you want" />
+        <button onclick="runTask()">Run</button>
+
+        <div class="output">
+            <h3>Plan</h3>
+            <p id="plan"></p>
+
+            <h3>Execution</h3>
+            <p id="execution"></p>
+
+            <h3>Review</h3>
+            <p id="review"></p>
+        </div>
+    </div>
+
+    <script>
+        // ===== CHAT HISTORY & TASK RUN =====
+        let chatHistory = [];
+
+        async function runTask(task=null) {
+            if(task===null) task = document.getElementById("taskInput").value;
+            if(!task) return;
+
+            const res = await fetch("/run", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ task })
+            });
+
+            const data = await res.json();
+
+            document.getElementById("plan").innerHTML =
+                data.plan.map(step => "• " + step).join("<br>");
+            document.getElementById("execution").innerText =
+                data.execution.final_answer;
+            document.getElementById("review").innerText =
+                data.review.summary;
+
+            if(!chatHistory.includes(task)) {
+                chatHistory.unshift(task);
+                updateHistoryList();
+            }
+        }
+
+        function updateHistoryList() {
+            const list = document.getElementById("historyList");
+            list.innerHTML = "";
+            chatHistory.forEach((t) => {
+                const btn = document.createElement("button");
+                btn.innerText = t;
+                btn.onclick = () => {
+                    document.getElementById("taskInput").value = t;
+                    runTask(t);
+                };
+                list.appendChild(btn);
+            });
+        }
+
+        function newChat() {
+            document.getElementById("taskInput").value = "";
+            document.getElementById("plan").innerText = "";
+            document.getElementById("execution").innerText = "";
+            document.getElementById("review").innerText = "";
+        }
+
+        function filterHistory() {
+            const search = document.getElementById("searchInput").value.toLowerCase();
+            const list = document.getElementById("historyList");
+            Array.from(list.children).forEach(btn => {
+                btn.style.display = btn.innerText.toLowerCase().includes(search) ? "block" : "none";
+            });
+        }
+
+        // ===== COLLAPSIBLE SIDEBAR =====
+        const toggleBtn = document.getElementById("toggleBtn");
+        const sidebarContent = document.getElementById("sidebarContent");
+
+        toggleBtn.onclick = () => {
+            if(sidebarContent.style.display === "none") {
+                sidebarContent.style.display = "flex";
+                document.getElementById("sidebar").style.width = "250px";
+            } else {
+                sidebarContent.style.display = "none";
+                document.getElementById("sidebar").style.width = "50px";
+            }
+        };
+    </script>
+
+</body>
+</html>
